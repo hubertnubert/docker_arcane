@@ -1,0 +1,11 @@
+# Secrets and local configurations
+.env
+.env.local
+
+# Databases and runtime data (if locally mounted)
+*.db
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db

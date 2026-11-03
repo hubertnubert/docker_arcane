@@ -1,0 +1,57 @@
+# =========================================================================
+# Arcane Docker Compose Configuration
+# =========================================================================
+
+services:
+
+  # --- Arcane ---
+
+  arcane:
+    image: ghcr.io/getarcaneapp/manager:latest
+    container_name: arcane
+    restart: "unless-stopped"
+    ports:
+      - '3552:3552'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - arcane-data:/app/data                       # App Folder
+      - ./arcane/projects:/app/data/projects              # Projects Folder
+      - ./arcane/builds:/app/data/builds                  # Build Workspace
+      - ./arcane/backups:/app/data/backups                # Backup Folder
+    environment:
+      APP_URL: "http://localhost:3552"
+      PUID: 1000
+      PGID: 1000
+      LOG_LEVEL: "info"                             # info, warn, error, debug
+      LOG_JSON: true
+      TZ: "Europe/Berlin"
+      ENCRYPTION_KEY: "${ARCANE_ENCRYPTION_KEY}"                      # Create with 'openssl rand -hex 32'
+      DATABASE_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}"
+    depends_on:
+      - postgres
+    cgroup: host
+    healthcheck:
+      test: ['CMD', './arcane', 'health', '--timeout', '2s']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    
+  # --- PostgreSQL ---
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: arcane-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "${DB_NAME}"
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+volumes:
+  arcane-data:
+  postgres-data:
