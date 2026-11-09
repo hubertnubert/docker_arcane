@@ -14,7 +14,7 @@ services:
       - '3552:3552'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - arcane-data:/app/data                       # App Folder
+      - arcane-data:/app/data                             # App Folder
       - ./arcane/projects:/app/data/projects              # Projects Folder
       - ./arcane/builds:/app/data/builds                  # Build Workspace
       - ./arcane/backups:/app/data/backups                # Backup Folder
@@ -22,13 +22,16 @@ services:
       APP_URL: "http://localhost:3552"
       PUID: 1000
       PGID: 1000
-      LOG_LEVEL: "info"                             # info, warn, error, debug
+      LOG_LEVEL: "info"                                   #info, warn, error, debug
       LOG_JSON: true
       TZ: "Europe/Berlin"
-      ENCRYPTION_KEY: "${ARCANE_ENCRYPTION_KEY}"                      # Create with 'openssl rand -hex 32'
+      ENCRYPTION_KEY: "${ARCANE_ENCRYPTION_KEY}"          # Create with 'openssl rand -hex 32'
       DATABASE_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}"
+    networks:
+      - arcane-internal
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     cgroup: host
     healthcheck:
       test: ['CMD', './arcane', 'health', '--timeout', '2s']
@@ -49,9 +52,18 @@ services:
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    ports:
-      - '5432:5432'
+    networks:
+      - arcane-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 3s
+      timeout: 5s
+      retries: 7
 
 volumes:
   arcane-data:
   postgres-data:
+
+networks:
+  arcane-internal:
+    driver: bridge
