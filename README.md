@@ -2,6 +2,9 @@
 
 This repository contains the Docker Compose configuration and environment templates to deploy **Arcane**, a web-based manager designed to control and monitor containerized infrastructures.
 
+Project-Link:  https://getarcane.app/
+               https://github.com/getarcaneapp/arcane
+
 ## 🚀 Prerequisites
 
 Before deploying, ensure your system has the following installed:
